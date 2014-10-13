@@ -9,6 +9,7 @@ import big.data.csv.CSVtoXMLDataSource;
 import big.data.csv.TSVtoXMLDataSource;
 import big.data.field.*;
 import big.data.json.JSONtoXMLDataSource;
+import big.data.rex.REXtoXMLDataSource;
 import big.data.sig.*;
 import big.data.util.*;
 import big.data.xml.XMLDataSource;
@@ -96,6 +97,21 @@ public abstract class DataSource implements IDataSource {
 		path = ProcessingDetector.tryToFixPath(path);
 		return connectCSV(path, path);
 	}
+	
+	public static DataSource connectREX(String path){
+		  path = ProcessingDetector.tryToFixPath(path);
+		  return connectREX(path, path);
+		 }
+
+	public static DataSource connectREXP(String path, String sep){
+		 path = ProcessingDetector.tryToFixPath(path);
+		 return new REXtoXMLDataSource(path, path, sep);
+		 }
+
+	public static DataSource connectREX(String name, String path){
+		 path = ProcessingDetector.tryToFixPath(path);
+		 return new REXtoXMLDataSource(name, path);
+		  }
 	
 	public static DataSource connectTSV(String path) {
 		path = ProcessingDetector.tryToFixPath(path);
