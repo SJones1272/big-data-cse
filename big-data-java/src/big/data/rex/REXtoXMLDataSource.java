@@ -1,64 +1,89 @@
 package big.data.rex;
+
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import big.data.DataSource;
 import big.data.util.XML;
 import big.data.xml.XMLDataSource;
 
 public class REXtoXMLDataSource extends XMLDataSource {
-	List<String[]> rows = new ArrayList<String[]>();
+	List<String[]> data = new ArrayList<String[]>();
 	String[] header;
-	//default it is just set to all whitespace
-	String sep = "\\W+";
+	//by default it separates file into rows based on
+	//new line character
+	String sep = "\n";
+	//By default it seperates on \w
+	String rowMatcher = "(.*\\w)";
 	String path;
+	Boolean scrape = false;
+	ByteArrayOutputStream baos;
+	Byte[] temp;
 	
 	public REXtoXMLDataSource(String name, String path) {
 		super(name, path);
 		this.header = null;
 		this.path = path;
-		this.sep = "\\W+";
-		
 	}
 	
-	public REXtoXMLDataSource(String name, String path, String sep){
+	public REXtoXMLDataSource(String name, String path, String rowMatcher){
 		super(name, path);
-		this.sep = sep;
+		this.rowMatcher = rowMatcher;
 		this.header = null;
 	}
 	
+	
 	//load the data source
-	@SuppressWarnings("resource")
 	public DataSource load(){	
-		BufferedReader reader = null;
+		//BufferedReader reader = null;
 		String resolvedPath = this.cacher.resolvePath(this.path);
-		try{
-			reader = new BufferedReader(new FileReader(new File(resolvedPath)));
+			try{
+			//reader = new BufferedReader(new FileReader(new File(resolvedPath)));
+			
+			//reads in all lines in a file
+			String lines = new String(Files.readAllBytes(Paths.get(this.path)));
+			System.out.println(lines);
+			//splits the file into rows
+			String[] rows = rowSplitter(lines);
+			for(int i = 0; i<rows.length; i++){
+				Matcher m = Pattern.compile(this.rowMatcher).matcher(rows[i]);
+				String[] temp = new String[m.groupCount()];
+				System.out.println(m.groupCount());
+				for(int r = 0; r<temp.length; r++){
+					temp[r] = m.group(r);
+					System.out.println(m.group(r));
+				}
+				data.add(temp);
+			}
+			}
+			/*
 			String curline;
 				while((curline = reader.readLine()) != null){
 					String[] temp = curline.split(this.sep);
 					rows.add(temp);
+					System.out.println(curline);
 				}
-		}
+			}
+			*/
 		catch(IOException e){
 			System.err.println("Bad file: " + resolvedPath);
 			e.printStackTrace();
 		}
 		
 		
-		if(rows.size() != 0){
+		if(data.size() != 0){
 			//if the header is not set it pulls off the first row by default
 			if(this.header == null){
-				this.header = rows.get(0);
-				rows.remove(0);
+				this.header = data.get(0);
+				data.remove(0);
 			}
-			XML xml = buildXML(this.header, rows);
+			XML xml = buildXML(this.header, this.data);
 			this.setXML(xml);
 			return super.load(false);
 		}
@@ -67,6 +92,11 @@ public class REXtoXMLDataSource extends XMLDataSource {
 	
 	}
 	
+	//splits a given string based on some delimiter.
+	private String[] rowSplitter(String t){
+		String[] temp = t.split(this.sep);
+		return temp;
+	}
 	
 	public DataSource setOption(String op, String value) {
 		if("regex".equalsIgnoreCase(op)){
@@ -75,12 +105,9 @@ public class REXtoXMLDataSource extends XMLDataSource {
 			
 		}
 		if ("header".equalsIgnoreCase(op)) {
-			//what would be the best thing to split header on?
-			Matcher m = Pattern.compile("([a-zA-z]+(\\_)?)").matcher(value);
-			header = new String[m.groupCount()];
-			for(int i = 0; i<m.groupCount(); i++){
-				this.header[i] = m.group();
-			}
+			//Splits the header -- assumes that each part contains letters/digits/underscores 
+			//and seperated by non word characters
+			this.header = value.split("\\W");
 			return this;
 		}
 		else {

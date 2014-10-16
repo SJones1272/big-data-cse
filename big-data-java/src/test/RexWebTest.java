@@ -6,12 +6,12 @@ public class RexWebTest {
 
 	public static void main(String[] args) {
 		DataSource ds = DataSource.connectREX("http://www.unitedstateszipcodes.org/ga/");
-		ds.setOption("header", "Name|Title");
-		//regex is wrong - pulls html code instead of just numbers.
-		ds.setOption("regex", "\\d+");
+		ds.setOption("header", "Name|Zip");
+		//come up with a regular expression
+		ds.setOption("regex", "");
 		ds.load();
 		ds.printUsageString();
-		String[] t = ds.fetchStringArray("row/");
+		String[] t = ds.fetchStringArray("row/Zip");
 		for(int i = 0; i<t.length; i++){
 			System.out.println(t[i]);
 		}

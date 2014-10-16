@@ -9,7 +9,7 @@ public class RexFileTest {
 		ds.setOption("regex", "\\|");
 		ds.load();
 		ds.printUsageString();
-		Person[] t = ds.fetchArray("test.Person", "row/First", "row/Last");
+		Person[] t = ds.fetchArray("test.Person", "row/Name", "row/Last");
 		for(int i = 0; i<t.length; i++){
 			System.out.println(t[i].toString());
 		}
