@@ -1,21 +1,34 @@
 package test;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import big.data.DataSource;
+import big.data.field.FieldToXMLSpec;
+import big.data.field.IDataField;
+import big.data.util.XML;
 
 public class RexWebTest {
 
-	public static void main(String[] args) {
-		DataSource ds = DataSource.connectREX("http://www.unitedstateszipcodes.org/ga/");
-		ds.setOption("header", "Name|Zip");
-		//come up with a regular expression
-		ds.setOption("regex", "");
+	public static void main(String[] args) throws FileNotFoundException {
+		DataSource ds = DataSource.connectREX("http://alerts.weather.gov/cap/ga.php?x=3");
+		ds.setOption("header", "City");
+		ds.setOption("rowMatcher", "(?!<td width='70%' valign='top'>)([\\w]+)(?=</td>)");
 		ds.load();
 		ds.printUsageString();
-		String[] t = ds.fetchStringArray("row/Zip");
-		for(int i = 0; i<t.length; i++){
-			System.out.println(t[i]);
+		PrintWriter writer = new PrintWriter(new File("/Users/Stephen/Desktop/Cities.txt"));
+		
+		String[] temp = ds.fetchStringArray("City");
+		for(String c : temp){
+			System.out.println(c);
+			writer.write(c + "\n");
 		}
-		System.out.println("done");
+		writer.close();
+	     IDataField fs = ds.getFieldSpec();
+	     XML fsxml = fs.apply(new FieldToXMLSpec());
+	     System.out.println(fsxml.format(2));
+	     
+	     //fsxml.write(writer);
 	}
 
-}
+} 

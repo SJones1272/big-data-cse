@@ -6,7 +6,7 @@ public class RexFileTest {
 	
 	public static void main(String[] args){
 		DataSource ds = DataSource.connectREX("/Users/Stephen/Desktop/test.txt");
-		ds.setOption("regex", "\\|");
+		ds.setOption("rowMatcher", "^([^|]+)\\|([^|]+)$");
 		ds.load();
 		ds.printUsageString();
 		Person[] t = ds.fetchArray("test.Person", "row/Name", "row/Last");
